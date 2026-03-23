@@ -1,0 +1,234 @@
+<section class="srt-features section-{{ section.id }}" style="background-color: {{ section.settings.bg_color }};">
+  <div class="container">
+    <div class="srt-features__grid">
+      {% for block in section.blocks %}
+        <div class="srt-features__item" {{ block.shopify_attributes }}>
+          <div class="srt-features__icon-wrapper">
+            {% if block.settings.custom_icon != blank %}
+              {% comment %} Increased width from 100 to 200 for better resolution {% endcomment %}
+              {{ block.settings.custom_icon | image_url: width: 200 | image_tag: class: 'srt-features__icon' }}
+            {% else %}
+              <div class="srt-features__icon-placeholder">
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </div>
+            {% endif %}
+          </div>
+          <h3 class="srt-features__title">{{ block.settings.title }}</h3>
+          <p class="srt-features__text">{{ block.settings.text }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .container {
+    width: 100%;
+    margin: 0 auto;
+    max-width: 1420px;
+  }
+  .srt-features { padding: 80px 0; overflow: hidden; }
+  .srt-features__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+    max-width: 1420px;
+    margin: 0 auto;
+  }
+
+  .srt-features__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid #00000014;
+    padding: 22px;
+    opacity: 0;
+    transition: 
+      transform 0.5s cubic-bezier(0.2, 1, 0.3, 1), 
+      box-shadow 0.5s cubic-bezier(0.2, 1, 0.3, 1),
+      border-color 0.5s ease;
+    will-change: opacity, transform;
+  }
+
+  .no-gsap .srt-features__item { opacity: 1; transform: none; }
+
+  .srt-features__icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: #fdf6f2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+    overflow: hidden;
+  }
+
+   .srt-features__item:hover {
+    transform: translateY(-10px) !important; /* Lifts the card up */
+    box-shadow: 0 20px 40px rgba(0,0,0,0.06); /* Adds soft depth */
+    border-color: #d9b8a34d; /* Subtle highlight on the border */
+    cursor: pointer;
+  } 
+
+  .srt-features__icon-wrapper {
+    transition: 
+      transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 0.4s ease;
+  }
+
+  /* Icon "Pop" effect */
+  .srt-features__item:hover .srt-features__icon-wrapper {
+    transform: scale(1.1) rotate(5deg); /* Scales up and tilts slightly */
+    background-color: #fcf1eb; /* Slightly deepens the circle color */
+  }
+
+  /* Smooth return for the icon when mouse leaves */
+  .srt-features__item:not(:hover) .srt-features__icon-wrapper {
+    transform: scale(1) rotate(0deg);
+  }
+
+  .srt-features__icon {
+    width: 60%; /* Controlled width relative to wrapper */
+    height: auto;
+    object-fit: contain;
+  }
+
+  .srt-features__icon-placeholder svg {
+    width: 45px;
+    height: 45px;
+    color: #d9b8a3;
+  }
+
+  .srt-features__title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    color: #121212;
+    letter-spacing: 0.01em;
+  }
+
+  .srt-features__text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #666;
+    margin: 0;
+    max-width: 300px;
+    font-weight: 300;
+  }
+
+  /* =====================
+      MOBILE OPTIMIZATION
+  ===================== */
+  @media (max-width: 1024px) {
+    .srt-features__grid { grid-template-columns: repeat(2, 1fr); gap: 40px 20px; }
+  }
+
+  @media (max-width: 768px) {
+    .srt-features { padding: 40px 0;}
+
+    .container { padding: 0 20px; } /* Prevent cards from hitting screen edges */
+
+    .srt-features__grid {
+      grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile for smaller cards */
+      gap: 15px; /* Tighter gap */
+    }
+
+    .srt-features__item {
+      padding: 15px 10px; /* Reduced internal padding */
+    }
+
+    .srt-features__icon-wrapper {
+      width: 60px; /* Scaled down circle */
+      height: 60px;
+      margin-bottom: 15px;
+    }
+
+    .srt-features__title {
+      font-size: 1rem; /* Smaller heading */
+      margin-bottom: 8px;
+    }
+
+    .srt-features__text {
+      font-size: 0.85rem; /* Smaller text */
+      line-height: 1.4;
+    }
+
+    /* Gentler lift on mobile to prevent accidental scrolls from feeling jumpy */
+    .srt-features__item:hover {
+      transform: translateY(-5px) !important;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const initAnimation = () => {
+      if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.to('.section-{{ section.id }} .srt-features__item', {
+          scrollTrigger: {
+            trigger: '.section-{{ section.id }}',
+            start: 'top 85%',
+          },
+          opacity: 1,
+          y: 0,
+          duration: 1.2,
+          stagger: 0.2,
+          ease: 'expo.out',
+        });
+      } else {
+        document.querySelector('.section-{{ section.id }}').classList.add('no-gsap');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', initAnimation);
+    document.addEventListener('shopify:section:load', initAnimation);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Premium Features",
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "feature",
+      "name": "Feature",
+      "settings": [
+        { "type": "image_picker", "id": "custom_icon", "label": "Icon Image" },
+        { "type": "text", "id": "title", "label": "Title", "default": "Feature Title" },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Description",
+          "default": "Description of your premium feature goes here."
+        }
+      ]
+    }
+  ],
+  "presets": [{ "name": "NB-Features" }]
+}
+{% endschema %}

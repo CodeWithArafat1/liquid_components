@@ -1,0 +1,1165 @@
+{% comment %}
+  Watch & Shop — Infinite Loop Reels Carousel (Oly Cosmetics Theme)
+{% endcomment %}
+
+{% style %}
+  :root {
+    --ws-black: {{ section.settings.text_color | default: '#000000' }};
+    --ws-white: {{ section.settings.bg_color | default: '#ffffff' }};
+    --ws-bg: {{ section.settings.section_bg_color | default: '#f9f9f9' }};
+    --ws-card-width: 260px;
+    --ws-card-height: 420px;
+    --ws-card-gap: 20px;
+    --ws-autoplay-speed: {{ section.settings.autoplay_speed | default: 3000 }}ms;
+  }
+
+  .ws-reels-section {
+    width: 100%;
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background: var(--ws-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+    position: relative;
+  }
+
+  .ws-reels-section * {
+    box-sizing: border-box;
+  }
+
+  /* ── Heading ── */
+  .ws-heading-wrap {
+    text-align: center;
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .ws-heading {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 700;
+    color: var(--ws-black);
+    margin: 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ── Carousel ── */
+  .ws-carousel-container {
+    position: relative;
+    width: 100%;
+    max-width: 1400px;
+    overflow: hidden;
+    padding: 20px 0;
+    cursor: grab;
+  }
+
+  .ws-carousel-container.is-dragging {
+    cursor: grabbing;
+  }
+
+  .ws-fade-left,
+  .ws-fade-right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 120px;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .ws-fade-left {
+    left: 0;
+    background: linear-gradient(90deg, var(--ws-bg) 0%, transparent 100%);
+  }
+
+  .ws-fade-right {
+    right: 0;
+    background: linear-gradient(270deg, var(--ws-bg) 0%, transparent 100%);
+  }
+
+  .ws-track {
+    display: flex;
+    gap: var(--ws-card-gap);
+    will-change: transform;
+  }
+
+  .ws-track.is-transitioning {
+    transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  /* ── Card (Square Design) ── */
+  .ws-card {
+    min-width: var(--ws-card-width);
+    width: var(--ws-card-width);
+    height: var(--ws-card-height);
+    border-radius: 0; /* Fully Square */
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.05);
+    background-color: #eee;
+    transition: transform 0.5s cubic-bezier(0.25,0.1,0.25,1),
+                opacity 0.5s ease,
+                filter 0.5s ease,
+                border-color 0.5s ease,
+                box-shadow 0.5s ease;
+  }
+
+  .ws-card.is-center {
+    border: 2px solid var(--ws-black);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  }
+
+  .ws-card.no-transition {
+    transition: none !important;
+  }
+
+  .ws-card-bg {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ws-card-emoji {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 72px;
+    opacity: 0.2;
+  }
+
+  .ws-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.2) 100%);
+    transition: background 0.5s ease;
+  }
+
+  .ws-card.is-center .ws-card-overlay {
+    background: linear-gradient(180deg, transparent 0%, transparent 40%, rgba(0,0,0,0.6) 100%);
+  }
+
+  /* ── Play button (Square) ── */
+  .ws-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 0; /* Square */
+    background: rgba(255,255,255,0.9);
+    border: 1px solid var(--ws-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .ws-card.is-center .ws-play-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ws-play-triangle {
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 16px solid var(--ws-black);
+    margin-left: 4px;
+  }
+
+  /* ── Sound toggle (Square) ── */
+  .ws-sound-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 0; /* Square */
+    background: var(--ws-black);
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: background 0.2s, opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+    padding: 0;
+  }
+
+  .ws-card.is-center .ws-sound-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .ws-sound-btn:hover {
+    background: #333333;
+  }
+
+  .ws-sound-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .ws-sound-icon-off { display: none; }
+  .ws-sound-btn.is-muted .ws-sound-icon-on { display: none; }
+  .ws-sound-btn.is-muted .ws-sound-icon-off { display: block; }
+
+  /* ── Bottom content ── */
+  .ws-card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    z-index: 3;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+  }
+
+  .ws-card.is-center .ws-card-content {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .ws-card-title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  /* ── CTA Button (Square & Minimal) ── */
+  .ws-card-cta {
+    padding: 12px 30px;
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 0; /* Square */
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+  }
+
+  .ws-card-cta:hover {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  /* ── Sound toggle (Transparent) ── */
+  .ws-sound-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 0;
+    background: transparent; /* Black BG Removed */
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: transform 0.2s ease, opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+    padding: 0;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); /* For visibility */
+  }
+
+  .ws-sound-btn:hover {
+    transform: scale(1.1);
+    background: transparent;
+  }
+
+  /* ── Video badge (Transparent) ── */
+  .ws-video-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 0;
+    background: transparent; /* Black BG Removed */
+    border-radius: 0;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); /* For visibility */
+  }
+
+  /* ── Video element ── */
+  .ws-card-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ── Progress bar ── */
+  .ws-progress-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.2);
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .ws-card.is-center .ws-progress-wrap {
+    opacity: 1;
+  }
+
+  .ws-progress-bar {
+    height: 100%;
+    background: #ffffff;
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+
+  /* ── Nav arrows (Square) ── */
+  .ws-nav-arrows {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .ws-arrow-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 0; /* Square */
+    border: 1px solid var(--ws-black);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+    color: var(--ws-black);
+  }
+
+  .ws-arrow-btn svg {
+    stroke: currentColor;
+    transition: stroke 0.3s;
+  }
+
+  .ws-arrow-btn:hover {
+    background: var(--ws-black);
+    color: var(--ws-white);
+  }
+
+  /* ── Dots (Square) ── */
+  .ws-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 25px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .ws-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 0; /* Square */
+    border: 1px solid var(--ws-black);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.3s ease;
+  }
+
+  .ws-dot.is-active {
+    width: 25px;
+    background: var(--ws-black);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    :root {
+      --ws-card-width: 220px;
+      --ws-card-height: 380px;
+      --ws-card-gap: 15px;
+    }
+
+    .ws-heading-wrap { margin-bottom: 30px; }
+    .ws-fade-left, .ws-fade-right { width: 50px; }
+    .ws-card-cta { padding: 10px 20px; font-size: 11px; }
+  }
+
+  @media (max-width: 480px) {
+    :root {
+      --ws-card-width: 200px;
+      --ws-card-height: 340px;
+      --ws-card-gap: 12px;
+    }
+
+    .ws-fade-left, .ws-fade-right { width: 30px; }
+  }
+{%- endstyle -%}
+
+<section class="ws-reels-section" data-section-id="{{ section.id }}" data-section-type="watch-and-shop-reels">
+
+  <div class="ws-heading-wrap">
+    <h2 class="ws-heading">{{ section.settings.heading | escape }}</h2>
+  </div>
+
+  <div class="ws-carousel-container" id="wsCarousel-{{ section.id }}">
+    <div class="ws-fade-left"></div>
+    <div class="ws-fade-right"></div>
+
+    <div class="ws-track is-transitioning" id="wsTrack-{{ section.id }}">
+      {%- comment -%} We render 3 copies: copy-0, copy-1, copy-2 for infinite loop {%- endcomment -%}
+      {%- for copy in (0..2) -%}
+        {%- for block in section.blocks -%}
+          <div
+            class="ws-card"
+            data-reel-index="{{ forloop.index0 }}"
+            data-copy="{{ copy }}"
+            data-global-index="{{ copy | times: section.blocks.size | plus: forloop.index0 }}"
+          >
+            <div class="ws-card-bg" style="background: {{ block.settings.card_gradient | default: '#eeeeee' }};">
+
+              {%- comment -%} Priority: 1) Shopify video  2) External URL  3) Image  4) Emoji {%- endcomment -%}
+
+              {%- if block.settings.shopify_video != blank -%}
+                {%- assign vid = block.settings.shopify_video -%}
+                <video
+                  class="ws-card-video"
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  {% if block.settings.poster_image != blank %}
+                    poster="{{ block.settings.poster_image | image_url: width: 520 }}"
+                  {% elsif block.settings.image != blank %}
+                    poster="{{ block.settings.image | image_url: width: 520 }}"
+                  {% endif %}
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                >
+                  {%- for source in vid.sources -%}
+                    <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                  {%- endfor -%}
+                </video>
+
+              {%- elsif block.settings.video_url != blank -%}
+                <video
+                  class="ws-card-video"
+                  src="{{ block.settings.video_url }}"
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  {% if block.settings.poster_image != blank %}
+                    poster="{{ block.settings.poster_image | image_url: width: 520 }}"
+                  {% elsif block.settings.image != blank %}
+                    poster="{{ block.settings.image | image_url: width: 520 }}"
+                  {% endif %}
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                ></video>
+
+              {%- elsif block.settings.image != blank -%}
+                <img
+                  src="{{ block.settings.image | image_url: width: 520 }}"
+                  alt="{{ block.settings.title | escape }}"
+                  loading="lazy"
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                >
+
+              {%- else -%}
+                <div class="ws-card-emoji">{{ block.settings.emoji | default: '✨' }}</div>
+              {%- endif -%}
+
+              {%- comment -%} Video duration badge {%- endcomment -%}
+              {%- if section.settings.show_duration -%}
+                {%- if block.settings.shopify_video != blank or block.settings.video_url != blank -%}
+                  <div class="ws-video-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>{{ block.settings.video_duration | default: '0:15' }}</span>
+                  </div>
+                {%- endif -%}
+              {%- endif -%}
+            </div>
+
+            <div class="ws-card-overlay"></div>
+
+            <div class="ws-play-btn">
+              <div class="ws-play-triangle"></div>
+            </div>
+
+            <button class="ws-sound-btn is-muted" aria-label="Toggle sound">
+              <svg class="ws-sound-icon-on" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+              <svg class="ws-sound-icon-off" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            </button>
+
+            {%- if section.settings.show_title or section.settings.show_button -%}
+              <div class="ws-card-content">
+                {%- if section.settings.show_title and block.settings.title != blank -%}
+                  <p class="ws-card-title">{{ block.settings.title | escape }}</p>
+                {%- endif -%}
+                
+                {%- if section.settings.show_button and block.settings.cta_text != blank -%}
+                  <a href="{{ block.settings.cta_link | default: '#' }}" class="ws-card-cta">
+                    {{ block.settings.cta_text | escape }}
+                  </a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+
+            <div class="ws-progress-wrap">
+              <div class="ws-progress-bar"></div>
+            </div>
+          </div>
+        {%- endfor -%}
+      {%- endfor -%}
+    </div>
+  </div>
+
+  <div class="ws-nav-arrows">
+    <button class="ws-arrow-btn ws-arrow-prev" aria-label="Previous reel">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </button>
+    <button class="ws-arrow-btn ws-arrow-next" aria-label="Next reel">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="ws-dots" id="wsDots-{{ section.id }}">
+    {%- for block in section.blocks -%}
+      <button class="ws-dot{% if forloop.first %} is-active{% endif %}" data-dot-index="{{ forloop.index0 }}" aria-label="Go to reel {{ forloop.index }}"></button>
+    {%- endfor -%}
+  </div>
+</section>
+
+<script>
+  (function () {
+    var SECTION_ID = '{{ section.id }}';
+    var BLOCK_COUNT = {{ section.blocks.size | default: 1 }};
+    var AUTOPLAY_MS = {{ section.settings.autoplay_speed | default: 3000 }};
+    var SLIDE_DURATION = 500; 
+
+    if (BLOCK_COUNT < 1) return;
+
+    var container = document.getElementById('wsCarousel-' + SECTION_ID);
+    var track = document.getElementById('wsTrack-' + SECTION_ID);
+    var dotsWrap = document.getElementById('wsDots-' + SECTION_ID);
+    var section = container.closest('.ws-reels-section');
+    var prevBtn = section.querySelector('.ws-arrow-prev');
+    var nextBtn = section.querySelector('.ws-arrow-next');
+    var dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.ws-dot')) : [];
+    var cards = Array.from(track.querySelectorAll('.ws-card'));
+
+    var metrics = getCardMetrics();
+    var currentIndex = BLOCK_COUNT;
+    var isAnimating = false;  
+    var isDragging = false;
+    var dragStartX = 0;
+    var dragOffset = 0;
+    var isPaused = false;
+    var isInView = true;
+
+    var progressRAF = null;
+    var fallbackTimer = null;
+    var fallbackStart = 0;
+    var activeEndedHandler = null;
+    var activeEndedVideo = null;
+    var boundaryTimer = null;
+
+    function getCardMetrics() {
+      var style = getComputedStyle(document.documentElement);
+      var w = parseInt(style.getPropertyValue('--ws-card-width')) || 260;
+      var g = parseInt(style.getPropertyValue('--ws-card-gap')) || 20;
+      return { cardWidth: w, gap: g, total: w + g };
+    }
+
+    function getTranslateX() {
+      var cw = container.offsetWidth;
+      return (cw / 2) - (metrics.cardWidth / 2) - (currentIndex * metrics.total) + dragOffset;
+    }
+
+    function applyTransform() {
+      track.style.transform = 'translateX(' + getTranslateX() + 'px)';
+    }
+
+    function enableTransition() {
+      track.classList.add('is-transitioning');
+    }
+
+    function disableTransition() {
+      track.classList.remove('is-transitioning');
+    }
+
+    function updateCardVisuals() {
+      var realIndex = ((currentIndex % BLOCK_COUNT) + BLOCK_COUNT) % BLOCK_COUNT;
+
+      cards.forEach(function (card, i) {
+        var dist = i - currentIndex;
+        var absD = Math.abs(dist);
+        var isCenter = dist === 0;
+        var scale = isCenter ? 1 : Math.max(0.78, 1 - absD * 0.08);
+        var opacity = isCenter ? 1 : Math.max(0.4, 1 - absD * 0.2);
+        var blur = isCenter ? 0 : Math.min(absD * 1.5, 4);
+
+        card.style.transform = 'scale(' + scale + ')';
+        card.style.opacity = opacity;
+        card.style.filter = 'blur(' + blur + 'px)';
+
+        if (isCenter) {
+          card.classList.add('is-center');
+        } else {
+          card.classList.remove('is-center');
+        }
+      });
+
+      dots.forEach(function (dot, i) {
+        if (i === realIndex) {
+          dot.classList.add('is-active');
+        } else {
+          dot.classList.remove('is-active');
+        }
+      });
+    }
+
+    function cleanupVideoListeners() {
+      if (activeEndedVideo && activeEndedHandler) {
+        activeEndedVideo.removeEventListener('ended', activeEndedHandler);
+      }
+      activeEndedVideo = null;
+      activeEndedHandler = null;
+    }
+
+    function manageVideos() {
+      cleanupVideoListeners();
+
+      cards.forEach(function (card, i) {
+        var vid = card.querySelector('.ws-card-video');
+        if (!vid) return;
+        if (i === currentIndex) {
+          vid.currentTime = 0;
+          vid.loop = false;
+          vid.play().catch(function () {});
+        } else {
+          vid.pause();
+        }
+      });
+    }
+
+    function stopProgress() {
+      if (progressRAF) { cancelAnimationFrame(progressRAF); progressRAF = null; }
+      if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+      cleanupVideoListeners();
+      cards.forEach(function (card) {
+        var bar = card.querySelector('.ws-progress-bar');
+        if (bar) bar.style.width = '0%';
+      });
+    }
+
+    function advanceToNext() {
+      if (isPaused || isDragging || isAnimating) return;
+      goTo(currentIndex + 1);
+    }
+
+    function startProgress() {
+      stopProgress();
+      if (isPaused || isDragging || !isInView) return;
+
+      var centerCard = cards[currentIndex];
+      if (!centerCard) return;
+
+      var vid = centerCard.querySelector('.ws-card-video');
+      var bar = centerCard.querySelector('.ws-progress-bar');
+
+      if (vid && vid.readyState >= 1 && vid.duration && isFinite(vid.duration) && vid.duration > 0.5) {
+        syncToVideo(vid, bar);
+      } else if (vid) {
+        var onMeta = function () {
+          vid.removeEventListener('loadedmetadata', onMeta);
+          if (cards[currentIndex] === centerCard && !isPaused) {
+            stopProgress();
+            syncToVideo(vid, bar);
+          }
+        };
+        vid.addEventListener('loadedmetadata', onMeta);
+        runFallbackProgress(bar);
+      } else {
+        runFallbackProgress(bar);
+      }
+    }
+
+    function syncToVideo(vid, bar) {
+      if (progressRAF) { cancelAnimationFrame(progressRAF); progressRAF = null; }
+      if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+      cleanupVideoListeners();
+
+      function tick() {
+        if (!vid || vid.paused) return;
+        var pct = (vid.duration > 0) ? (vid.currentTime / vid.duration) * 100 : 0;
+        if (bar) bar.style.width = Math.min(pct, 100) + '%';
+        progressRAF = requestAnimationFrame(tick);
+      }
+      progressRAF = requestAnimationFrame(tick);
+
+      activeEndedVideo = vid;
+      activeEndedHandler = function () {
+        cleanupVideoListeners();
+        if (progressRAF) { cancelAnimationFrame(progressRAF); progressRAF = null; }
+        if (bar) bar.style.width = '100%';
+        setTimeout(advanceToNext, 250);
+      };
+      vid.addEventListener('ended', activeEndedHandler);
+    }
+
+    function runFallbackProgress(bar) {
+      if (progressRAF) { cancelAnimationFrame(progressRAF); progressRAF = null; }
+      if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+
+      fallbackStart = Date.now();
+
+      function tick() {
+        var elapsed = Date.now() - fallbackStart;
+        var pct = (elapsed / AUTOPLAY_MS) * 100;
+        if (bar) bar.style.width = Math.min(pct, 100) + '%';
+        if (pct < 100) {
+          progressRAF = requestAnimationFrame(tick);
+        }
+      }
+      progressRAF = requestAnimationFrame(tick);
+
+      fallbackTimer = setTimeout(function () {
+        if (bar) bar.style.width = '100%';
+        setTimeout(advanceToNext, 250);
+      }, AUTOPLAY_MS);
+    }
+
+    function scheduleBoundaryCheck() {
+      if (boundaryTimer) clearTimeout(boundaryTimer);
+      boundaryTimer = setTimeout(function () {
+        boundaryTimer = null;
+        var needsReset = false;
+
+        if (currentIndex >= BLOCK_COUNT * 2) {
+          currentIndex -= BLOCK_COUNT;
+          needsReset = true;
+        } else if (currentIndex < BLOCK_COUNT) {
+          currentIndex += BLOCK_COUNT;
+          needsReset = true;
+        }
+
+        if (needsReset) {
+          disableTransition();
+          applyTransform();
+          updateCardVisuals();
+          void track.offsetHeight;
+          requestAnimationFrame(function () {
+            enableTransition();
+            isAnimating = false;
+          });
+        } else {
+          isAnimating = false;
+        }
+      }, SLIDE_DURATION + 60);
+    }
+
+    function goTo(index) {
+      if (isAnimating) return;
+      isAnimating = true;
+
+      stopProgress();
+      enableTransition();
+      currentIndex = index;
+      applyTransform();
+      updateCardVisuals();
+      manageVideos();
+
+      scheduleBoundaryCheck();
+
+      setTimeout(function () {
+        if (!isPaused && !isDragging && isInView) {
+          startProgress();
+        }
+      }, SLIDE_DURATION + 80);
+    }
+
+    function pauseEverything() {
+      isPaused = true;
+      stopProgress();
+      var centerCard = cards[currentIndex];
+      if (centerCard) {
+        var vid = centerCard.querySelector('.ws-card-video');
+        if (vid && !vid.paused) vid.pause();
+      }
+    }
+
+    function resumeEverything() {
+      isPaused = false;
+      var centerCard = cards[currentIndex];
+      if (centerCard) {
+        var vid = centerCard.querySelector('.ws-card-video');
+        if (vid) vid.play().catch(function () {});
+      }
+      startProgress();
+    }
+
+    container.addEventListener('mouseenter', function () { pauseEverything(); });
+    container.addEventListener('mouseleave', function () {
+      if (isDragging) endDrag();
+      resumeEverything();
+    });
+
+    function startDrag(x) {
+      if (isAnimating) return;
+      isDragging = true;
+      dragStartX = x;
+      dragOffset = 0;
+      disableTransition();
+      container.classList.add('is-dragging');
+      stopProgress();
+    }
+
+    function moveDrag(x) {
+      if (!isDragging) return;
+      dragOffset = x - dragStartX;
+      applyTransform();
+    }
+
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      container.classList.remove('is-dragging');
+
+      if (Math.abs(dragOffset) > metrics.cardWidth / 3) {
+        var dir = dragOffset > 0 ? -1 : 1;
+        dragOffset = 0;
+        goTo(currentIndex + dir);
+      } else {
+        dragOffset = 0;
+        enableTransition();
+        applyTransform();
+        startProgress();
+      }
+    }
+
+    container.addEventListener('mousedown', function (e) { e.preventDefault(); startDrag(e.clientX); });
+    container.addEventListener('mousemove', function (e) { moveDrag(e.clientX); });
+    container.addEventListener('mouseup', endDrag);
+    container.addEventListener('touchstart', function (e) { startDrag(e.touches[0].clientX); }, { passive: true });
+    container.addEventListener('touchmove', function (e) { moveDrag(e.touches[0].clientX); }, { passive: true });
+    container.addEventListener('touchend', endDrag);
+
+    prevBtn.addEventListener('click', function () { goTo(currentIndex - 1); });
+    nextBtn.addEventListener('click', function () { goTo(currentIndex + 1); });
+
+    dots.forEach(function (dot, i) {
+      dot.addEventListener('click', function () {
+        goTo(BLOCK_COUNT + i);
+      });
+    });
+
+    cards.forEach(function (card, i) {
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('.ws-card-cta') || e.target.closest('.ws-sound-btn')) return;
+        if (i !== currentIndex && !isDragging) goTo(i);
+      });
+    });
+
+    section.querySelectorAll('.ws-sound-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        btn.classList.toggle('is-muted');
+        var card = btn.closest('.ws-card');
+        var vid = card.querySelector('.ws-card-video');
+        if (vid) {
+          vid.muted = !vid.muted;
+          if (!vid.muted && vid.paused) vid.play().catch(function () {});
+        }
+        var reelIdx = card.getAttribute('data-reel-index');
+        cards.forEach(function (other) {
+          if (other === card) return;
+          if (other.getAttribute('data-reel-index') === reelIdx) {
+            var oVid = other.querySelector('.ws-card-video');
+            var oBtn = other.querySelector('.ws-sound-btn');
+            if (oVid) oVid.muted = vid ? vid.muted : true;
+            if (oBtn) {
+              if (btn.classList.contains('is-muted')) { oBtn.classList.add('is-muted'); }
+              else { oBtn.classList.remove('is-muted'); }
+            }
+          }
+        });
+      });
+    });
+
+    if ('IntersectionObserver' in window) {
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          isInView = entry.isIntersecting;
+          if (!isInView) {
+            stopProgress();
+            cards.forEach(function (c) {
+              var v = c.querySelector('.ws-card-video');
+              if (v) v.pause();
+            });
+          } else if (!isPaused) {
+            manageVideos();
+            startProgress();
+          }
+        });
+      }, { threshold: 0.15 });
+      obs.observe(section);
+    }
+
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        metrics = getCardMetrics();
+        disableTransition();
+        applyTransform();
+        void track.offsetHeight;
+        enableTransition();
+      }, 150);
+    });
+
+    disableTransition();
+    applyTransform();
+    updateCardVisuals();
+    manageVideos();
+    void track.offsetHeight;
+    enableTransition();
+
+    setTimeout(function () {
+      startProgress();
+    }, 600);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Watch & Shop Reels",
+  "tag": "section",
+  "class": "ws-reels-section-wrapper",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "WATCH & SHOP"
+    },
+    {
+      "type": "header",
+      "content": "Card Elements Visibility"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_title",
+      "label": "Show Title",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button",
+      "label": "Show CTA Button",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_duration",
+      "label": "Show Video Duration Badge",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Colors & Layout"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "section_bg_color",
+      "label": "Section Background",
+      "default": "#f9f9f9"
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "label": "Autoplay speed (ms)",
+      "min": 1000,
+      "max": 8000,
+      "step": 500,
+      "default": 4000,
+      "unit": "ms"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 150,
+      "step": 5,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 150,
+      "step": 5,
+      "default": 80,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "reel",
+      "name": "Reel",
+      "settings": [
+        {
+          "type": "header",
+          "content": "📝 Content"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Premium Gloss"
+        },
+        {
+          "type": "text",
+          "id": "cta_text",
+          "label": "Button text",
+          "default": "SHOP NOW"
+        },
+        {
+          "type": "url",
+          "id": "cta_link",
+          "label": "Button link"
+        },
+        {
+          "type": "header",
+          "content": "🎬 Video"
+        },
+        {
+          "type": "video",
+          "id": "shopify_video",
+          "label": "Upload video",
+          "info": "Upload a video directly to Shopify. Recommended: vertical 9:16 ratio, under 20MB."
+        },
+        {
+          "type": "text",
+          "id": "video_url",
+          "label": "OR external video URL (mp4)",
+          "info": "Use this if you have an external .mp4 link instead of uploading."
+        },
+        {
+          "type": "text",
+          "id": "video_duration",
+          "label": "Video duration label",
+          "default": "0:15",
+          "info": "Displayed as a badge on the reel (e.g. 0:30, 1:05)"
+        },
+        {
+          "type": "header",
+          "content": "🖼️ Images"
+        },
+        {
+          "type": "image_picker",
+          "id": "poster_image",
+          "label": "Video poster / cover image",
+          "info": "Shown before video plays. If empty, thumbnail image is used."
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Thumbnail image",
+          "info": "Used if no video is provided, or as poster fallback."
+        },
+        {
+          "type": "header",
+          "content": "🎨 Style"
+        },
+        {
+          "type": "text",
+          "id": "emoji",
+          "label": "Fallback emoji",
+          "default": "✨",
+          "info": "Shown if no video or image is set."
+        },
+        {
+          "type": "color",
+          "id": "card_gradient",
+          "label": "Fallback Background Color",
+          "default": "#eeeeee",
+          "info": "Background color behind the media."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Watch & Shop Reels",
+      "blocks": [
+        { "type": "reel" },
+        { "type": "reel" },
+        { "type": "reel" },
+        { "type": "reel" },
+        { "type": "reel" }
+      ]
+    }
+  ]
+}
+{% endschema %}

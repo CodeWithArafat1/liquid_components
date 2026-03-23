@@ -1,0 +1,416 @@
+<link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
+
+<style>
+  #section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    --nav-color: {{ section.settings.nav_color }};
+  }
+
+  .hero-slider-{{ section.id }} {
+    width: 100%;
+    background-color: #000;
+  }
+
+  .hero-slide-item {
+    width: 100%;
+    height: {{ section.settings.desktop_height }}vh;
+    min-height: 400px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: {{ section.settings.text_align }};
+  }
+
+  .hero-slide-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+
+  /* Full Control Overlay */
+  .hero-slide-item::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: {{ section.settings.overlay_color }};
+    opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+    z-index: 2;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 3;
+    color: #fff;
+    padding: 0 5%;
+    max-width: 800px;
+    text-align: {{ section.settings.text_align_css }};
+  }
+
+  .hero-content h2 {
+    font-size: {{ section.settings.title_size }}px;
+    margin-bottom: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: {{ section.settings.title_color }};
+  }
+
+  .hero-content p {
+    font-size: {{ section.settings.subtitle_size }}px;
+    margin-bottom: 30px;
+    line-height: 1.5;
+    color: {{ section.settings.subtitle_color }};
+  }
+
+  /* Button Styling */
+  .hero-btn {
+    display: inline-block;
+    padding: 14px 35px;
+    text-decoration: none;
+    border-radius: {{ section.settings.btn_radius }}px;
+    font-weight: 600;
+    transition: 0.3s ease;
+    background-color: {{ section.settings.btn_bg_color }};
+    color: {{ section.settings.btn_text_color }};
+  }
+  .hero-btn:hover {
+    filter: brightness(1.2);
+  }
+
+  /* Custom Navigation Styling */
+  .flickity-prev-next-button {
+    width: 50px;
+    height: 50px;
+    background: transparent;
+    color: var(--nav-color);
+  }
+  .flickity-prev-next-button:hover { background: transparent; color: var(--nav-color); opacity: 0.7; }
+  .flickity-prev-next-button.previous { left: 20px; }
+  .flickity-prev-next-button.next { right: 20px; }
+  
+  .flickity-page-dots { bottom: 25px; }
+  .flickity-page-dots .dot { background: var(--nav-color); }
+
+  @media (max-width: 768px) {
+    .hero-slide-item { height: {{ section.settings.mobile_height }}vh; justify-content: center; }
+    .hero-content { text-align: center; }
+    .hero-content h2 { font-size: {{ section.settings.title_size_mobile }}px; }
+    .hero-content p { font-size: 16px; }
+    {% unless section.settings.show_arrows_mobile %}
+        .flickity-prev-next-button { display: none; }
+    {% endunless %}
+  }
+</style>
+
+<section id="section-{{ section.id }}">
+  <div class="hero-slider-{{ section.id }}" 
+       data-flickity='{ 
+          "cellAlign": "left", 
+          "contain": true, 
+          "autoPlay": {% if section.settings.autoplay %}{{ section.settings.autoplay_speed | times: 1000 }}{% else %}false{% endif %}, 
+          "wrapAround": true, 
+          "prevNextButtons": {{ section.settings.show_arrows }}, 
+          "pageDots": {{ section.settings.show_dots }},
+          "pauseAutoPlayOnHover": true,
+          "adaptiveHeight": false
+       }'>
+    
+    {% for block in section.blocks %}
+      <div class="hero-slide-item" {{ block.shopify_attributes }}>
+        {% if block.settings.image != blank %}
+          <img src="{{ block.settings.image | img_url: '2000x' }}" 
+               loading="lazy"
+               alt="{{ block.settings.title | escape }}" 
+               class="hero-slide-img">
+        {% else %}
+          {{ 'lifestyle-2' | placeholder_svg_tag: 'hero-slide-img placeholder-svg' }}
+        {% endif %}
+
+        <div class="hero-content">
+          {% if block.settings.title != blank %}
+            <h2>{{ block.settings.title }}</h2>
+          {% endif %}
+          
+          {% if block.settings.subtitle != blank %}
+            <p>{{ block.settings.subtitle }}</p>
+          {% endif %}
+
+          {% if block.settings.btn_label != blank %}
+            <a href="{{ block.settings.btn_link }}" class="hero-btn">
+              {{ block.settings.btn_label }}
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+<script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+
+{% schema %}
+{
+  "name": "Full-Width Hero Slider",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout Controls"
+    },
+    {
+      "type": "range",
+      "id": "desktop_height",
+      "min": 40,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "label": "Desktop Height",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "mobile_height",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "label": "Mobile Height",
+      "default": 60
+    },
+    {
+      "type": "select",
+      "id": "text_align",
+      "label": "Content Alignment",
+      "options": [
+        { "value": "flex-start", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "flex-end", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "text_align_css",
+      "label": "Text Alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Overlay Control"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Overlay Opacity",
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "Typography Control"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 20,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "label": "Title Size (Desktop)",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "title_size_mobile",
+      "min": 18,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "Title Size (Mobile)",
+      "default": 28
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "min": 14,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "label": "Subtitle Size",
+      "default": 18
+    },
+    {
+      "type": "header",
+      "content": "Button Control"
+    },
+    {
+      "type": "color",
+      "id": "btn_bg_color",
+      "label": "Button Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "btn_text_color",
+      "label": "Button Text",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "btn_radius",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "Button Corner Radius",
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Slider Controls"
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Enable Autoplay",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "label": "Autoplay Speed",
+      "default": 5
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Show Navigation Arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows_mobile",
+      "label": "Show Arrows on Mobile",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "Show Page Dots",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "nav_color",
+      "label": "Navigation Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Section Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Padding Top",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Padding Bottom",
+      "default": 0
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Slide Image"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Premium Hero Slide"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Subtitle",
+          "default": "Describe your brand in a few words."
+        },
+        {
+          "type": "text",
+          "id": "btn_label",
+          "label": "Button Label",
+          "default": "Shop Now"
+        },
+        {
+          "type": "url",
+          "id": "btn_link",
+          "label": "Button Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Full-Width Hero Slider",
+      "blocks": [
+        { "type": "slide" },
+        { "type": "slide" }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,202 @@
+{{ 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js' | script_tag }}
+{{ 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js' | script_tag }}
+
+{%- assign product_ref = all_products[section.settings.featured_product] -%}
+
+<section class="srt-vs section-{{ section.id }}" style="background-color: {{ section.settings.bg_color }};">
+  <div class="container">
+    
+    <div class="srt-vs__header">
+      <h2 class="srt-vs__title">{{ section.settings.title }}</h2>
+      <p class="srt-vs__subtitle">{{ section.settings.subtitle }}</p>
+    </div>
+
+    <div class="srt-vs__grid">
+      
+      <div class="srt-vs__card srt-vs__card--left">
+        <div class="srt-vs__card-inner">
+          <span class="srt-vs__tag srt-vs__tag--best">
+            {% render 'icon-premium-badge' %} 
+            {{ section.settings.left_tag_text }}
+          </span>
+          
+          <div class="srt-vs__image-wrapper">
+            {% if section.settings.left_image != blank %}
+              {{ section.settings.left_image | image_url: width: 600 | image_tag: class: 'srt-vs__img', loading: 'lazy' }}
+            {% elsif product_ref.featured_image != blank %}
+              {{ product_ref.featured_image | image_url: width: 600 | image_tag: class: 'srt-vs__img', loading: 'lazy' }}
+            {% else %}
+              {{ 'product-1' | placeholder_svg_tag: 'srt-vs__img placeholder' }}
+            {% endif %}
+          </div>
+
+          <div class="srt-vs__meta-area">
+            <h3 class="srt-vs__card-title">
+              {{ section.settings.left_product_name | default: product_ref.title | default: "Select a Product" }}
+            </h3>
+            <p class="srt-vs__card-price">
+              {% if section.settings.left_price != blank %}
+                {{ section.settings.left_price }}
+              {% elsif product_ref != blank %}
+                {{ product_ref.price | money }}
+              {% endif %}
+            </p>
+          </div>
+
+          <div class="srt-vs__checklist srt-vs__checklist--positive">
+            {% for block in section.blocks %}
+              {% if block.type == 'positive_point' %}
+                <div class="srt-vs__check-item" {{ block.shopify_attributes }}>
+                  <span class="srt-vs__icon">{% render 'icon-check' %}</span>
+                  <p>{{ block.settings.positive_text }}</p>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          {% if section.settings.show_button %}
+            <a href="{{ section.settings.button_link | default: product_ref.url | default: '#' }}" class="srt-vs__button">
+              <span>{{ section.settings.button_text }}</span>
+            </a>
+          {% endif %}
+          
+          {% if section.settings.shipping_text != blank %}
+            <p class="srt-vs__footer-text">{{ section.settings.shipping_text }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="srt-vs__card srt-vs__card--right">
+        <div class="srt-vs__card-inner">
+          <span class="srt-vs__tag srt-vs__tag--alt">{{ section.settings.right_tag_text }}</span>
+
+          <div class="srt-vs__image-wrapper">
+            {% if section.settings.right_image != blank %}
+              {{ section.settings.right_image | image_url: width: 600 | image_tag: class: 'srt-vs__img', loading: 'lazy' }}
+            {% else %}
+              {{ 'product-2' | placeholder_svg_tag: 'srt-vs__img placeholder' }}
+            {% endif %}
+          </div>
+
+          <div class="srt-vs__meta-area srt-vs__meta-area--competitor">
+            <h3 class="srt-vs__card-title">{{ section.settings.right_product_name }}</h3>
+          </div>
+
+          <div class="srt-vs__checklist srt-vs__checklist--negative">
+            {% for block in section.blocks %}
+              {% if block.type == 'negative_point' %}
+                <div class="srt-vs__check-item" {{ block.shopify_attributes }}>
+                  <span class="srt-vs__icon">{% render 'icon-x' %}</span>
+                  <p>{{ block.settings.negative_text }}</p>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .srt-vs { padding: 80px 0; overflow: hidden; }
+  .srt-vs__header { text-align: center; margin-bottom: 60px; }
+  .srt-vs__title { font-size: 2.8rem; font-weight: 600; color: #121212; margin: 0 0 10px 0; }
+  .srt-vs__subtitle { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+  .srt-vs__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; max-width: 1200px; margin: 0 auto;}
+
+  .srt-vs__card { 
+    background: #fff; border-radius: 24px; padding: 50px; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05); display: flex; flex-direction: column; 
+    transition: transform 0.4s ease;
+  }
+  .srt-vs__card--left { background-color: #F8F1EB; border: 1px solid #ECD1C1; }
+
+  .srt-vs__tag { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; padding: 6px 14px; border-radius: 100px; margin-bottom: 25px; align-self: flex-start; }
+  .srt-vs__tag--best { background-color: #ECD1C1; color: #4A3B31; }
+  .srt-vs__tag--alt { background-color: #f0f0f0; color: #777; }
+
+  .srt-vs__image-wrapper { border-radius: 22px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; overflow: hidden; }
+  .srt-vs__img { height: 100%; width: auto; object-fit: contain; transition: transform 0.5s ease; }
+  .srt-vs__card:hover .srt-vs__img { transform: scale(1.05); }
+
+  .srt-vs__meta-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .srt-vs__card-title { font-size: 1.6rem; font-weight: 600; margin: 0; }
+  .srt-vs__card-price { font-size: 1.3rem; font-weight: 500; margin: 0; }
+
+  .srt-vs__checklist { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; }
+  .srt-vs__check-item { display: flex; gap: 12px; opacity: 0; transform: translateY(10px); }
+  .srt-vs__icon { width: 20px; height: 20px; flex-shrink: 0; }
+  .srt-vs__checklist--positive svg { color: #8B5E3C; }
+  .srt-vs__checklist--negative svg { color: #999; }
+
+  /* Premium Shining Button */
+  .srt-vs__button {
+    position: relative; overflow: hidden; display: block; width: 100%; text-align: center;
+    background: linear-gradient(90deg, #f5e3d6 0%, #F3E1D4 50%, #d9b8a3 100%); color: #121212; padding: 18px; border-radius: 100px;
+    text-decoration: none; font-weight: 700; transition: all 0.3s ease; z-index: 1;
+  }
+  .srt-vs__button::after {
+    content: ""; position: absolute; top: -50%; left: -60%; width: 20%; height: 200%;
+    background: rgba(255,255,255,0.4); transform: rotate(30deg); animation: srt-shine 4s infinite;
+  }
+  @keyframes srt-shine {
+    0% { left: -60%; } 20% { left: 120%; } 100% { left: 120%; }
+  }
+  .srt-vs__button:hover { background: #D9B8A3; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+  .srt-vs__footer-text { font-size: 0.8rem; color: #888; text-align: center; margin-top: 15px; }
+
+  @media (max-width: 768px) {
+    .srt-vs { padding: 40px 0;}
+    .srt-vs__header { margin-bottom: 30px; }
+    .srt-vs__grid { grid-template-columns: 1fr; }
+    .srt-vs__card { padding: 30px; }
+    .srt-vs__title { font-size: 1.8rem; }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.gsap) {
+      gsap.to(".section-{{ section.id }} .srt-vs__check-item", {
+        scrollTrigger: { trigger: ".srt-vs__grid", start: "top 80%" },
+        opacity: 1, y: 0, stagger: 0.1, duration: 0.8, ease: "power2.out"
+      });
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "SRT - V.S. Comparison",
+  "settings": [
+    { "type": "color", "id": "bg_color", "label": "Section Background", "default": "#FAEBDF" },
+    { "type": "text", "id": "title", "label": "Heading", "default": "Chosen for a Reason" },
+    { "type": "textarea", "id": "subtitle", "label": "Subtitle", "default": "Compare our quality." },
+    { "type": "header", "content": "Product Selection" },
+    { "type": "product", "id": "featured_product", "label": "Select Your Product" },
+    { "type": "header", "content": "Left Column (Your Brand)" },
+    { "type": "text", "id": "left_tag_text", "label": "Badge", "default": "Best Choice" },
+    { "type": "text", "id": "left_product_name", "label": "Custom Name (Optional)" },
+    { "type": "text", "id": "left_price", "label": "Custom Price (Optional)" },
+    { "type": "image_picker", "id": "left_image", "label": "Custom Image (Optional)" },
+    { "type": "header", "content": "Right Column (Competitor)" },
+    { "type": "text", "id": "right_tag_text", "label": "Badge", "default": "Typical Alternative" },
+    { "type": "text", "id": "right_product_name", "label": "Competitor Name", "default": "Other Brands" },
+    { "type": "image_picker", "id": "right_image", "label": "Competitor Image" },
+    { "type": "header", "content": "Button Settings" },
+    { "type": "checkbox", "id": "show_button", "label": "Show Button", "default": true },
+    { "type": "text", "id": "button_text", "label": "Button Text", "default": "View product" },
+    { "type": "url", "id": "button_link", "label": "Button Link Override" },
+    { "type": "text", "id": "shipping_text", "label": "Footer Text", "default": "Fast Shipping • Easy Returns" }
+  ],
+  "blocks": [
+    { "type": "positive_point", "name": "Positive Point", "settings": [{ "type": "text", "id": "positive_text", "label": "Text" }] },
+    { "type": "negative_point", "name": "Negative Point", "settings": [{ "type": "text", "id": "negative_text", "label": "Text" }] }
+  ],
+  "presets": [{ "name": "NB - V.S. Comparison" }]
+}
+{% endschema %}
