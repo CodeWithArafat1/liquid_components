@@ -1,0 +1,279 @@
+{% schema %}
+{
+  "name": "Premium Video Popup",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured Video"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Click the play button to watch our story."
+    },
+    {
+      "type": "header",
+      "content": "Video Settings"
+    },
+    {
+      "type": "select",
+      "id": "video_type",
+      "label": "Video Source",
+      "options": [
+        { "value": "youtube", "label": "YouTube" },
+        { "value": "shopify", "label": "Shopify Upload" }
+      ],
+      "default": "shopify"
+    },
+    {
+      "type": "video_url",
+      "id": "youtube_url",
+      "label": "YouTube URL",
+      "accept": ["youtube"]
+    },
+    {
+      "type": "video",
+      "id": "shopify_video",
+      "label": "Shopify Hosted Video"
+    },
+    {
+      "type": "header",
+      "content": "Width & Sizing Controls"
+    },
+    {
+      "type": "range",
+      "id": "thumbnail_width",
+      "label": "Normal Section Width (Thumbnail)",
+      "min": 400,
+      "max": 1400,
+      "step": 50,
+      "unit": "px",
+      "default": 700
+    },
+    {
+      "type": "range",
+      "id": "popup_width",
+      "label": "Popup Video Width",
+      "min": 600,
+      "max": 1600,
+      "step": 50,
+      "unit": "px",
+      "default": 1000
+    },
+    {
+      "type": "header",
+      "content": "Layout & Styling"
+    },
+    {
+      "type": "image_picker",
+      "id": "cover_image",
+      "label": "Cover Image (Thumbnail)"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Play Button Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top Padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom Padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "default": 40
+    }
+  ],
+  "presets": [
+    {
+      "name": "Premium Video Popup"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+  #section-{{ section.id }} {
+    padding: {{ section.settings.padding_top }}px 20px {{ section.settings.padding_bottom }}px;
+    text-align: center;
+  }
+
+  /* Trigger Area (Thumbnail) Width Control */
+  .video-trigger-{{ section.id }} {
+    position: relative;
+    max-width: {{ section.settings.thumbnail_width }}px;
+    margin: 30px auto 0;
+    cursor: pointer;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  }
+
+  .video-trigger-{{ section.id }} img {
+    width: 100%;
+    display: block;
+    transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+
+  .video-trigger-{{ section.id }}:hover img {
+    transform: scale(1.05);
+  }
+
+  /* Modal Background Overlay */
+  .video-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease-in-out;
+  }
+
+  .video-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Popup Content Width Control */
+  .video-modal-content-{{ section.id }} {
+    position: relative;
+    width: 95%;
+    max-width: {{ section.settings.popup_width }}px;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 12px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+    transform: scale(0.85);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .video-modal-overlay.active .video-modal-content-{{ section.id }} {
+    transform: scale(1);
+  }
+
+  .video-modal-content-{{ section.id }} iframe,
+  .video-modal-content-{{ section.id }} video {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    display: block;
+  }
+
+  /* Close Button */
+  .close-modal {
+    position: absolute;
+    top: -45px;
+    right: -10px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 40px;
+    font-weight: 300;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* Play Button on Thumbnail */
+  .play-trigger-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: {{ section.settings.accent_color }};
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+
+  .play-trigger-btn svg {
+    width: 25px;
+    fill: #000;
+    margin-left: 3px;
+  }
+</style>
+
+<div id="section-{{ section.id }}">
+  <div class="video-header">
+    <h2>{{ section.settings.heading }}</h2>
+    <p>{{ section.settings.subheading }}</p>
+  </div>
+
+  <div class="video-trigger-{{ section.id }}" onclick="openVideoModal('{{ section.id }}')">
+    {% if section.settings.cover_image != blank %}
+      <img src="{{ section.settings.cover_image | image_url: width: 1400 }}" alt="{{ section.settings.heading }}">
+    {% else %}
+      <div style="background: #222; height: 350px; display: flex; align-items: center; justify-content: center; color: #fff;">
+        Set Cover Image
+      </div>
+    {% endif %}
+    
+    <div class="play-trigger-btn">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </div>
+  </div>
+</div>
+
+<div class="video-modal-overlay" id="modal-{{ section.id }}" onclick="closeVideoModal('{{ section.id }}')">
+  <div class="video-modal-content-{{ section.id }}" onclick="event.stopPropagation()">
+    <button class="close-modal" onclick="closeVideoModal('{{ section.id }}')">&times;</button>
+    <div id="player-container-{{ section.id }}" style="width:100%; height:100%;"></div>
+  </div>
+</div>
+
+<script>
+function openVideoModal(id) {
+  const modal = document.getElementById('modal-' + id);
+  const container = document.getElementById('player-container-' + id);
+  
+  let videoHTML = '';
+  {% if section.settings.video_type == 'youtube' %}
+    videoHTML = `<iframe src="https://www.youtube.com/embed/{{ section.settings.youtube_url.id }}?autoplay=1&rel=0&modestbranding=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+  {% else %}
+    {% if section.settings.shopify_video != blank %}
+      videoHTML = `<video controls autoplay playsinline>
+                    <source src="{{ section.settings.shopify_video.sources[0].url }}" type="video/mp4">
+                   </video>`;
+    {% endif %}
+  {% endif %}
+
+  container.innerHTML = videoHTML;
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden'; 
+}
+
+function closeVideoModal(id) {
+  const modal = document.getElementById('modal-' + id);
+  const container = document.getElementById('player-container-' + id);
+  
+  modal.classList.remove('active');
+  container.innerHTML = ''; 
+  document.body.style.overflow = 'auto'; 
+}
+</script>
