@@ -1,0 +1,961 @@
+{% comment %}
+  ============================================================
+  Section: Product Scroll Showcase
+  File:    sections/product-showcase.liquid
+  
+  A sticky-pinned section where each scroll step reveals the
+  next product with a cinematic vertical slide animation.
+  Fully responsive — stacks vertically on mobile.
+  
+  MODIFIED: Shop now button now adds items to cart via AJAX
+  instead of navigating to the product page.
+  ============================================================
+{% endcomment %}
+
+{%- style -%}
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+  /* ── Reset & container ─────────────────────────────── */
+  #psc-{{ section.id }} *,
+  #psc-{{ section.id }} *::before,
+  #psc-{{ section.id }} *::after {
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  #psc-{{ section.id }} {
+    --psc-radius: 20px;
+    --psc-duration: 0.75s;
+    --psc-ease: cubic-bezier(0.77, 0, 0.18, 1);
+    font-family: var(--psc-font-body);
+    position: relative;
+  }
+
+  /* ── Scroll track (creates scroll height) ─────────── */
+  .psc-track {
+    /* Each product gets 100vh of scroll travel */
+    height: calc({{ section.blocks | size }} * 100vh);
+    position: relative;
+  }
+
+  /* ── Sticky viewport ──────────────────────────────── */
+  .psc-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    border-radius: 0;
+  }
+
+  /* ── Individual product slide ─────────────────────── */
+  .psc-slide {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: 1fr;
+    align-items: center;
+    gap: 2rem;
+    padding: 3rem 4rem;
+    will-change: transform, opacity;
+    transition:
+      transform var(--psc-duration) var(--psc-ease),
+      opacity 0.5s ease;
+  }
+
+  .psc-slide[data-state="active"]  { transform: translateY(0);     opacity: 1; }
+  .psc-slide[data-state="above"]   { transform: translateY(-100%); opacity: 0; }
+  .psc-slide[data-state="below"]   { transform: translateY(100%);  opacity: 0; }
+
+  /* ── Text panels ──────────────────────────────────── */
+  .psc-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .psc-panel--left  { align-items: flex-end; text-align: right; }
+  .psc-panel--right { align-items: flex-start; text-align: left; }
+
+  .psc-eyebrow {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+
+  .psc-product-name {
+    font-family: var(--psc-font-display);
+    font-size: clamp(2.5rem, 4.5vw, 5rem);
+    line-height: 0.95;
+    letter-spacing: 0.04em;
+
+  }
+
+  .psc-description {
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 40ch;
+    opacity: 0.75;
+  }
+
+  .psc-price {
+    font-size: clamp(1.3rem, 2.5vw, 2rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .psc-price s {
+    font-weight: 300;
+    opacity: 0.45;
+    font-size: 0.7em;
+    text-decoration: line-through;
+    margin-right: 0.4em;
+  }
+
+  .psc-cta {
+    display: inline-block;
+    padding: 11px 28px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: var(--psc-font-body);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1.5px solid currentColor;
+    opacity: 0.85;
+    transition: opacity 0.2s, background 0.2s;
+    cursor: pointer;
+    color: inherit;
+    background: transparent;
+    margin-top: 0.25rem;
+  }
+  .psc-cta:hover { opacity: 1; background: rgba(255,255,255,0.12); }
+  .psc-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .psc-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    border: 1px solid currentColor;
+    opacity: 0.55;
+  }
+
+  .psc-stat-label {
+    font-size: clamp(14px, 1.2vw, 16px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-bottom: 4px;
+  }
+
+  .psc-stat-value {
+    font-family: var(--psc-font-display);
+    font-size: clamp(3rem, 5vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .psc-shipping-note {
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 300;
+    opacity: 0.7;
+    max-width: 18ch;
+    line-height: 1.5;
+  }
+
+  /* ── Center image ─────────────────────────────────── */
+  .psc-image-wrap {
+    width: clamp(180px, 22vw, 280px);
+    height: clamp(180px, 22vw, 280px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .psc-image-wrap img {
+    width: 200%;
+    height: 200%;
+    object-fit: cover;
+    display: block;
+    transform: rotate(25deg);
+    animation: bounce 4s ease-in-out infinite;
+  }
+
+ @keyframes bounce {
+  0% {
+    transform:  translateY(0);
+  }
+
+  50% {
+    transform:  translateY(-12px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+  .psc-image-placeholder {
+    font-size: clamp(60px, 8vw, 90px);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Nav dots ─────────────────────────────────────── */
+  .psc-dots {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 20;
+  }
+
+  .psc-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    transition: background 0.3s, transform 0.3s;
+    outline: none;
+  }
+  .psc-dot.is-active,
+  .psc-dot:hover { background: rgba(255,255,255,0.9); transform: scale(1.5); }
+
+  /* ── Progress bar ─────────────────────────────────── */
+  .psc-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.85);
+    width: 0%;
+    transition: width 0.4s ease;
+    z-index: 20;
+  }
+
+  /* ── Scroll hint ──────────────────────────────────── */
+  .psc-scroll-hint {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 20;
+    opacity: 0.4;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  .psc-scroll-hint.is-hidden { opacity: 0; }
+
+  .psc-scroll-hint span {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: white;
+  }
+
+  .psc-scroll-arrow {
+    width: 20px;
+    height: 20px;
+    border-right: 1.5px solid white;
+    border-bottom: 1.5px solid white;
+    transform: rotate(45deg);
+    animation: psc-bounce 1.6s ease-in-out infinite;
+  }
+
+  @keyframes psc-bounce {
+    0%, 100% { transform: rotate(45deg) translateY(0); }
+    50%       { transform: rotate(45deg) translateY(5px); }
+  }
+
+  /* ── Slide counter ────────────────────────────────── */
+  .psc-counter {
+    position: absolute;
+    left: 24px;
+    bottom: 28px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.45);
+    z-index: 20;
+    font-family: var(--psc-font-display);
+    font-size: 14px;
+  }
+
+  /* ── MOBILE ──────────────────────────────────────── */
+ @media (max-width: 767px) {
+  /* Keep sticky scroll alive on mobile — just tighten the layout */
+  .psc-slide {
+    margin-top:10px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    justify-items: center;
+    text-align: center;
+    padding: 2rem 1.25rem 5rem;
+    gap: 1.25rem;
+  }
+
+  .psc-panel--left  {
+    align-items: center;
+    text-align: center;
+    order: 1;
+  }
+  .psc-image-wrap { order: 1; }
+  .psc-panel--right {
+    align-items: center;
+    text-align: center;
+    order: 3;
+  }
+
+  .psc-description  { max-width: 32ch; }
+  .psc-shipping-note { max-width: 28ch; }
+
+  /* Shrink circle image on mobile */
+  .psc-image-wrap {
+    width: clamp(140px, 45vw, 200px);
+    height: clamp(140px, 45vw, 200px);
+  }
+
+  /* Keep dots, progress, hint visible */
+  .psc-dots { right: 12px; }
+  .psc-counter { display: none; }
+
+  .psc-image-wrap img{
+    animation: none;
+    transform:rotate(-40deg);
+    transform:scale(0.8)
+  }
+}
+
+
+  /* ── Star Ratings ─────────────────────────────────── */
+  .psc-ratings-wrapper {
+    margin: 0.5rem 0;
+  }
+
+  .psc-manual-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .psc-stars {
+    display: flex;
+    gap: 0.25rem;
+    font-size: clamp(12px, 1.5vw, 16px);
+  }
+
+  .psc-star {
+    color: rgba(255, 255, 255, 0.3);
+    transition: color 0.2s ease;
+  }
+
+  .psc-star.is-filled {
+    color: rgb(255, 255, 255);
+  }
+
+  .psc-rating-count {
+    font-size: clamp(12px, 1vw, 14px);
+    opacity: 0.65;
+    font-weight: 300;
+  }
+
+  /* Judge Me widget styling */
+  .jdgm-widget {
+    font-size: clamp(12px, 1.2vw, 14px);
+  }
+
+
+  /* ── TABLET ──────────────────────────────────────── */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .psc-slide { padding: 2.5rem 2.5rem; gap: 1.5rem; }
+    .psc-product-name { font-size: clamp(2.2rem, 5vw, 3.8rem); }
+  }
+{%- endstyle -%}
+
+<section id="psc-{{ section.id }}" aria-label="{{ section.settings.section_label | escape }}">
+  <div class="psc-track" data-psc-track>
+
+    <div class="psc-sticky" data-psc-sticky>
+
+      {%- for block in section.blocks -%}
+        {%- assign is_first = false -%}
+        {%- if forloop.index0 == 0 -%}{%- assign is_first = true -%}{%- endif -%}
+
+        <div
+          class="psc-slide"
+          data-psc-slide
+          data-index="{{ forloop.index0 }}"
+          data-state="{% if is_first %}active{% else %}below{% endif %}"
+          style="background: {{ block.settings.background_color }}; color: {{ block.settings.text_color }};"
+          {{ block.shopify_attributes }}
+        >
+          {%- comment %} LEFT PANEL {%- endcomment %}
+          <div class="psc-panel psc-panel--left">
+            {%- if block.settings.eyebrow != blank -%}
+              <p class="psc-eyebrow">{{ block.settings.eyebrow }}</p>
+            {%- endif -%}
+
+            <h2 class="psc-product-name" style="color: {{ block.settings.text_color }};">{{ block.settings.product_name }}</h2>
+
+            {%- if block.settings.description != blank -%}
+              <p class="psc-description">{{ block.settings.description }}</p>
+            {%- endif -%}
+
+            {%- if block.settings.product != blank -%}
+              <form method="post" action="/cart/add" class="psc-product-form" id="product-form-{{ forloop.index }}">
+                <input
+                  type="hidden"
+                  name="id"
+                  value="{{ block.settings.product.selected_or_first_available_variant.id }}"
+                >
+                <button
+                  type="submit"
+                  class="psc-cta"
+                  aria-label="Add {{ block.settings.product_name | escape }} to cart"
+                  {% unless block.settings.product.selected_or_first_available_variant.available %}
+                    disabled
+                  {% endunless %}
+                >
+                  {{- block.settings.cta_text | default: 'Shop now' -}}
+                </button>
+              </form>
+            {%- elsif block.settings.cta_url != blank -%}
+              <a href="{{ block.settings.cta_url }}" class="psc-cta">
+                {{- block.settings.cta_text | default: 'Shop now' -}}
+              </a>
+            {%- endif -%}
+          </div>
+
+          {%- comment %} CENTER IMAGE {%- endcomment %}
+          <div class="psc-image-wrap">
+           
+            {%- if block.settings.image != blank -%}
+              {{
+                block.settings.image
+                | image_url: width: 560
+                | image_tag:
+                  loading: 'lazy',
+                  alt: block.settings.image.alt | default: block.settings.product_name,
+                  widths: '280, 420, 560'
+              }}
+            {%- else -%}
+              <div class="psc-image-placeholder" aria-hidden="true">
+                {{ block.settings.emoji | default: '✦' }}
+              </div>
+            {%- endif -%}
+          </div>
+
+          {%- comment %} RIGHT PANEL {%- endcomment %}
+          <div class="psc-panel psc-panel--right">
+            {%- if block.settings.tag != blank -%}
+              <span class="psc-tag">{{ block.settings.tag }}</span>
+            {%- endif -%}
+
+            {%- if block.settings.stat_value != blank -%}
+              <div>
+                {%- if block.settings.stat_label != blank -%}
+                  <p class="psc-stat-label">{{ block.settings.stat_label }}</p>
+                {%- endif -%}
+                <div class="psc-stat-value">{{ block.settings.stat_value }}</div>
+              </div>
+            {%- endif -%}
+
+            {%- if block.settings.show_ratings -%}
+              <div class="psc-ratings-wrapper">
+                {%- if block.settings.use_judge_me_ratings -%}
+                  {%- if block.settings.product != blank -%}
+                    <div class="jdgm-widget" data-product-id="{{ block.settings.product.id }}"></div>
+                  {%- endif -%}
+                {%- else -%}
+                  <div class="psc-manual-rating">
+                    <div class="psc-stars" aria-label="Rating: {{ block.settings.manual_rating }} out of 5 stars">
+                      {%- for i in (1..5) -%}
+                        <span class="psc-star{% if i <= block.settings.manual_rating %} is-filled{% endif %}">★</span>
+                      {%- endfor -%}
+                    </div>
+                    {%- if block.settings.rating_count != blank -%}
+                      <span class="psc-rating-count">({{ block.settings.rating_count }})</span>
+                    {%- endif -%}
+                  </div>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+
+            {%- if block.settings.note != blank -%}
+              <p class="psc-shipping-note">{{ block.settings.note }}</p>
+            {%- endif -%}
+
+            <div class="psc-price">
+                 {%- if block.settings.product != blank -%}
+              {{ block.settings.product.price | money }}
+            {% else %}
+              {%- if block.settings.compare_price != blank -%}
+                <s>{{ block.settings.compare_price }}</s>
+              {%- endif -%}
+              {{ block.settings.price }}
+
+            {% endif %}
+            </div>
+
+          </div>
+        </div>
+      {%- endfor -%}
+
+      <nav class="psc-dots" aria-label="Product navigation">
+        {%- for block in section.blocks -%}
+          <button
+            class="psc-dot{% if forloop.index0 == 0 %} is-active{% endif %}"
+            data-psc-dot
+            data-target="{{ forloop.index0 }}"
+            aria-label="Go to product {{ forloop.index }}"
+          ></button>
+        {%- endfor -%}
+      </nav>
+
+      <div class="psc-progress" data-psc-progress></div>
+
+      {% comment %} <div class="psc-counter" data-psc-counter aria-live="polite">
+        1 <span style="opacity:.35;font-size:0.8em;margin:0 3px">/</span> {{ section.blocks | size }}
+      </div> {% endcomment %}
+
+      <div class="psc-scroll-hint" data-psc-hint>
+        <span>scroll</span>
+        <div class="psc-scroll-arrow" aria-hidden="true"></div>
+      </div>
+
+    </div>{%- comment %} /.psc-sticky {%- endcomment %}
+  </div>{%- comment %} /.psc-track {%- endcomment %}
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var section = document.getElementById('psc-{{ section.id }}');
+  if (!section) return;
+
+  var track    = section.querySelector('[data-psc-track]');
+  var slides   = Array.from(section.querySelectorAll('[data-psc-slide]'));
+  var dots     = Array.from(section.querySelectorAll('[data-psc-dot]'));
+  var progress = section.querySelector('[data-psc-progress]');
+  var counter  = section.querySelector('[data-psc-counter]');
+  var hint     = section.querySelector('[data-psc-hint]');
+
+  var total   = slides.length;
+  var current = 0;
+  var locked  = false;
+
+  /* ── Ella / theme overflow fix ───────────────────────
+     Walk up the DOM and clear any overflow:hidden that
+     would prevent position:sticky from working.        */
+  function fixOverflow() {
+    var el = section.parentElement;
+    var limit = 8;
+    while (el && el !== document.body && limit-- > 0) {
+      var computed = window.getComputedStyle(el);
+      var ov = computed.overflow + computed.overflowX + computed.overflowY;
+      if (ov.indexOf('hidden') !== -1 || ov.indexOf('clip') !== -1) {
+        el.style.overflow = 'visible';
+      }
+      el = el.parentElement;
+    }
+  }
+  fixOverflow();
+
+  /* ── Apply state ─────────────────────────────────── */
+  function setState(slide, state) {
+    slide.setAttribute('data-state', state);
+  }
+
+  /* ── Transition to index ─────────────────────────── */
+  function goTo(next, fromDir) {
+    if (next === current) return;
+    if (next < 0 || next >= total) return;
+    if (locked) return;
+    locked = true;
+
+    var dir = (fromDir !== undefined) ? fromDir : (next > current ? 1 : -1);
+
+    setState(slides[current], dir > 0 ? 'above' : 'below');
+    setState(slides[next], 'active');
+
+    dots[current].classList.remove('is-active');
+    dots[next].classList.add('is-active');
+
+    current = next;
+
+    if (counter) {
+      counter.innerHTML = (current + 1) +
+        ' <span style="opacity:.35;font-size:0.8em;margin:0 3px">/</span> ' + total;
+    }
+
+    if (progress) {
+      progress.style.width = ((current / (total - 1)) * 100) + '%';
+    }
+
+    if (hint && current > 0) hint.classList.add('is-hidden');
+
+    setTimeout(function () { locked = false; }, 780);
+  }
+
+  /* ── Dot clicks ──────────────────────────────────── */
+  dots.forEach(function (dot) {
+    dot.addEventListener('click', function () {
+      var idx = parseInt(dot.getAttribute('data-target'), 10);
+      goTo(idx);
+    });
+  });
+
+  /* ── Scroll driver ───────────────────────────────── */
+  function onScroll() {
+    var rect     = track.getBoundingClientRect();
+    var scrolled = -rect.top;
+    var trackH   = track.offsetHeight - window.innerHeight;
+    if (trackH <= 0) return;
+    var frac   = Math.max(0, Math.min(1, scrolled / trackH));
+    var target = Math.round(frac * (total - 1));
+    if (target !== current) goTo(target, target > current ? 1 : -1);
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  /* ── Keyboard nav ────────────────────────────────── */
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowUp'   || e.key === 'ArrowLeft')  { e.preventDefault(); goTo(current - 1); }
+  });
+
+  /* ── Touch swipe (works on both mobile & desktop) ── */
+  var touchY    = 0;
+  var touchLast = 0;
+  section.addEventListener('touchstart', function (e) {
+    touchY = e.touches[0].clientY;
+  }, { passive: true });
+
+  section.addEventListener('touchend', function (e) {
+    var dy  = touchY - e.changedTouches[0].clientY;
+    var now = Date.now();
+    if (Math.abs(dy) < 40 || now - touchLast < 700) return;
+    touchLast = now;
+    if (dy > 0) goTo(current + 1);
+    else        goTo(current - 1);
+  }, { passive: true });
+
+  /* ── Resize ──────────────────────────────────────── */
+  window.addEventListener('resize', function () {
+    slides.forEach(function (s, i) {
+      setState(s, i === current ? 'active' : (i < current ? 'above' : 'below'));
+    });
+    fixOverflow();
+  });
+
+})();
+
+ /* ── Judge me ──────────────────────────────────────── */
+(function() {
+  if (window.jdgm === undefined) {
+    window.jdgm = {};
+  }
+  var script = document.createElement('script');
+  script.src = 'https://cdn.judge.me/embed.js';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Product Showcase",
+  "tag": "section",
+  "class": "psc-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_label",
+      "label": "Accessibility label",
+      "default": "Featured products showcase"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product_slide",
+      "name": "Product Slide",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Product"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product (optional — auto-fills image & URL)"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Custom image (overrides product image)"
+        },
+        {
+          "type": "text",
+          "id": "emoji",
+          "label": "Fallback emoji (if no image)",
+          "default": "✦"
+        },
+        {
+          "type": "header",
+          "content": "Left panel text"
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "Eyebrow label",
+          "default": "The staple"
+        },
+        {
+          "type": "text",
+          "id": "product_name",
+          "label": "Product name (display)",
+          "default": "PRODUCT NAME"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Short description",
+          "default": "A short, evocative description of what makes this product special."
+        },
+        {
+          "type": "text",
+          "id": "price",
+          "label": "Price",
+          "default": "$49"
+        },
+        {
+          "type": "text",
+          "id": "compare_price",
+          "label": "Compare at price (optional)",
+          "default": "$$$"
+        },
+        {
+          "type": "text",
+          "id": "cta_text",
+          "label": "Button label",
+          "default": "Shop now"
+        },
+        {
+          "type": "url",
+          "id": "cta_url",
+          "label": "Button URL (if no product linked)"
+        },
+        {
+          "type": "header",
+          "content": "Right panel text"
+        },
+        {
+          "type": "text",
+          "id": "tag",
+          "label": "Tag / badge",
+          "default": "Bestseller"
+        },
+        {
+          "type": "text",
+          "id": "stat_label",
+          "label": "Stat label",
+          "default": "Burn time"
+        },
+        {
+          "type": "text",
+          "id": "stat_value",
+          "label": "Stat value",
+          "default": "60hr"
+        },
+        {
+          "type": "text",
+          "id": "note",
+          "label": "Small note",
+          "default": "Free shipping on orders over $80"
+        },
+        {
+          "type": "header",
+          "content": "Colors"
+        },
+        {
+          "type": "header",
+          "content": "Ratings"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_ratings",
+          "label": "Show product ratings",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "use_judge_me_ratings",
+          "label": "Use Judge Me ratings (if unchecked, uses manual rating below)",
+          "default": true
+        },
+        {
+          "type": "range",
+          "id": "manual_rating",
+          "label": "Manual star rating",
+          "min": 0,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        },
+        {
+          "type": "text",
+          "id": "rating_count",
+          "label": "Number of reviews (for manual rating)",
+          "default": "120"
+        },
+        {
+          "type": "header",
+          "content": "Colors"
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Background color",
+          "default": "#1a1a2e"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Text color",
+          "default": "#e8d5b7"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Showcase",
+      "blocks": [
+        {
+          "type": "product_slide",
+          "settings": {
+            "eyebrow": "The staple",
+            "product_name": "NOIR MIST",
+            "description": "Hand-poured soy wax with hints of cedar and vetiver. Burns for 60+ hours.",
+            "price": "$42",
+            "tag": "Bestseller",
+            "stat_label": "Burn time",
+            "stat_value": "60hr",
+            "note": "Free shipping on orders over $80",
+            "emoji": "🕯️",
+            "background_color": "#1a1a2e",
+            "text_color": "#e8d5b7"
+          }
+        },
+        {
+          "type": "product_slide",
+          "settings": {
+            "eyebrow": "The ritual",
+            "product_name": "DAWN SALT",
+            "description": "Himalayan pink salt crystals blended with eucalyptus and mint. 400g.",
+            "price": "$38",
+            "tag": "Vegan",
+            "stat_label": "Net weight",
+            "stat_value": "400g",
+            "note": "Cruelty-free and sustainably sourced",
+            "emoji": "🧂",
+            "background_color": "#3d1a1a",
+            "text_color": "#ffd6e0"
+          }
+        },
+        {
+          "type": "product_slide",
+          "settings": {
+            "eyebrow": "The morning",
+            "product_name": "SOLEIL BLOOM",
+            "description": "Cold-pressed botanical face oil. Rosehip, marula and neroli for radiant skin.",
+            "price": "$64",
+            "tag": "Organic",
+            "stat_label": "Volume",
+            "stat_value": "30ml",
+            "note": "Dermatologist tested",
+            "emoji": "🌸",
+            "background_color": "#1f3a1f",
+            "text_color": "#c8f0b8"
+          }
+        },
+        {
+          "type": "product_slide",
+          "settings": {
+            "eyebrow": "The soak",
+            "product_name": "VELVET FOG",
+            "description": "Effervescent bath soak with magnesium flakes, lavender and chamomile.",
+            "price": "$29",
+            "tag": "Relaxing",
+            "stat_label": "Per pack",
+            "stat_value": "6 uses",
+            "note": "No artificial fragrance",
+            "emoji": "🛁",
+            "background_color": "#2a1a3e",
+            "text_color": "#e8d4ff"
+          }
+        },
+        {
+          "type": "product_slide",
+          "settings": {
+            "eyebrow": "The glow",
+            "product_name": "AMBER DUSK",
+            "description": "Shimmering dry body oil with argan, jojoba and 24k gold micro-particles.",
+            "price": "$55",
+            "tag": "Luxury",
+            "stat_label": "Volume",
+            "stat_value": "100ml",
+            "note": "Free gift wrap available",
+            "emoji": "✨",
+            "background_color": "#3a2800",
+            "text_color": "#ffe8a0"
+          }
+        },
+        {
+          "type": "product_slide",
+          "settings": {
+            "eyebrow": "The ritual kit",
+            "product_name": "PURE CORE",
+            "description": "Complete wellness set — scrub, mist, balm and serum. Gift-ready packaging.",
+            "price": "$129",
+            "tag": "Gift set",
+            "stat_label": "Included",
+            "stat_value": "4 items",
+            "note": "Limited edition packaging",
+            "emoji": "🎁",
+            "background_color": "#0d2a3a",
+            "text_color": "#b8eaf5"
+          }
+        }
+      ]
+    }
+  ],
+  "max_blocks": 12
+}
+{% endschema %}

@@ -1,0 +1,425 @@
+{% schema %}
+{
+  "name": "HB Timeline Ultimate",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout Settings"
+    },
+    {
+      "type": "range",
+      "id": "container_width",
+      "min": 800,
+      "max": 1600,
+      "step": 10,
+      "unit": "px",
+      "label": "Container Max Width",
+      "default": 1200
+    },
+    {
+      "type": "header",
+      "content": "Section Colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent Color (Line & Dots)",
+      "default": "#C5A065"
+    },
+    {
+      "type": "header",
+      "content": "Image Settings"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image Aspect Ratio",
+      "options": [
+        { "value": "auto", "label": "Original Size (Auto)" },
+        { "value": "1/1", "label": "Square (1:1)" },
+        { "value": "4/3", "label": "Landscape (4:3)" },
+        { "value": "3/4", "label": "Portrait (3:4)" },
+        { "value": "16/9", "label": "Wide (16:9)" }
+      ],
+      "default": "4/3",
+      "info": "Select a fixed ratio to make all images look the same size."
+    },
+    {
+      "type": "header",
+      "content": "Text Content"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "How It Works"
+    },
+    {
+      "type": "textarea",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "Follow these simple steps to enjoy serenity."
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 60
+    }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "step_title",
+          "label": "Step Title",
+          "default": "Step Title Here"
+        },
+        {
+          "type": "textarea",
+          "id": "step_desc",
+          "label": "Description",
+          "default": "Description of this step goes here."
+        },
+        {
+           "type": "header",
+           "content": "Visuals"
+        },
+        {
+          "type": "image_picker",
+          "id": "side_image",
+          "label": "Side Image (Large)"
+        },
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Small Icon (Optional)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "HB Timeline Ultimate",
+      "blocks": [
+        { "type": "step" },
+        { "type": "step" },
+        { "type": "step" }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+  #shopify-section-{{ section.id }} .hb-timeline-wrapper {
+    background-color: {{ section.settings.bg_color }};
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    color: {{ section.settings.text_color }};
+    font-family: inherit;
+    overflow: hidden;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .hb-timeline-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 50px auto;
+  }
+
+  .hb-timeline-header h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: {{ section.settings.text_color }};
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+
+  .hb-timeline-header p {
+    font-size: 16px;
+    color: {{ section.settings.text_color }};
+    opacity: 0.8;
+    margin-top: 0;
+  }
+
+  .hb-timeline-container {
+    position: relative;
+    max-width: {{ section.settings.container_width }}px;
+    margin: 0 auto;
+  }
+
+  .hb-timeline-container::before {
+    content: '';
+    position: absolute;
+    width: 2px;
+    background-color: {{ section.settings.accent_color }};
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -1px;
+  }
+
+  .hb-timeline-item {
+    padding: 30px 0;
+    position: relative;
+    width: 50%;
+    box-sizing: border-box;
+  }
+
+  .hb-timeline-item:nth-child(odd) {
+    left: 0;
+    text-align: right;
+    padding-right: 40px;
+  }
+
+  .hb-timeline-item:nth-child(even) {
+    left: 50%;
+    text-align: left;
+    padding-left: 40px;
+  }
+
+  .hb-timeline-item::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background-color: {{ section.settings.bg_color }};
+    border: 2px solid {{ section.settings.accent_color }};
+    top: 50%; 
+    transform: translateY(-50%);
+    border-radius: 50%;
+    z-index: 2;
+  }
+
+  .hb-timeline-item:nth-child(odd)::after {
+    right: -9px;
+  }
+  .hb-timeline-item:nth-child(even)::after {
+    left: -9px;
+  }
+
+  .hb-item-inner-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    position: relative;
+    width: 100%;
+  }
+
+  .hb-timeline-item:nth-child(even) .hb-item-inner-wrapper {
+    flex-direction: row-reverse;
+  }
+
+  .hb-content-box {
+    position: relative;
+    flex: 1;
+  }
+
+  .hb-side-image-box {
+    flex: 1;
+    width: 100%; 
+    max-width: 50%; 
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .hb-side-image-box img {
+    width: 100%;
+    display: block;
+    aspect-ratio: {{ section.settings.image_ratio }};
+    object-fit: cover;
+    height: auto;
+  }
+
+  .hb-step-number {
+    font-size: 50px;
+    font-weight: 900;
+    color: {{ section.settings.text_color }};
+    opacity: 0.05;
+    position: absolute;
+    top: -20px;
+    line-height: 1;
+    z-index: 0;
+  }
+  .hb-timeline-item:nth-child(odd) .hb-step-number { right: 0; }
+  .hb-timeline-item:nth-child(even) .hb-step-number { left: 0; }
+
+  .hb-step-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+    display: inline-block;
+    position: relative; z-index: 1;
+  }
+  .hb-step-icon img { width: 100%; height: auto; object-fit: contain; }
+
+  .hb-item-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+    color: {{ section.settings.text_color }};
+    line-height: 1.3;
+  }
+
+  .hb-item-desc {
+    font-size: 15px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+    color: {{ section.settings.text_color }};
+    opacity: 0.85;
+    margin: 0;
+  }
+
+  @media screen and (max-width: 1024px) {
+    .hb-item-inner-wrapper,
+    .hb-timeline-item:nth-child(even) .hb-item-inner-wrapper {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 15px;
+    }
+
+    .hb-side-image-box {
+        max-width: 100%;
+    }
+
+    .hb-timeline-item:nth-child(odd) .hb-content-box,
+    .hb-timeline-item:nth-child(even) .hb-content-box {
+        text-align: inherit;
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+
+    #shopify-section-{{ section.id }} .hb-timeline-wrapper {
+      padding-left: 15px;
+      padding-right: 15px;
+      padding-top: 40px;
+      padding-bottom: 40px;
+    }
+
+    .hb-timeline-container::before {
+      left: 15px;
+    }
+
+    .hb-timeline-item {
+      width: 100%;
+      left: 0 !important;
+      padding: 0 0 40px 45px;
+      text-align: left !important;
+    }
+    
+    .hb-timeline-item:nth-child(odd),
+    .hb-timeline-item:nth-child(even) {
+        padding-right: 0;
+    }
+
+    .hb-timeline-item::after,
+    .hb-timeline-item:nth-child(odd)::after,
+    .hb-timeline-item:nth-child(even)::after {
+      left: 6px;
+      right: auto;
+      top: 30px;
+      transform: none;
+    }
+
+    .hb-item-inner-wrapper {
+      flex-direction: column !important;
+      gap: 15px;
+    }
+
+    .hb-side-image-box {
+      max-width: 100%;
+      order: 2;
+      margin-top: 10px;
+    }
+
+    .hb-timeline-item:nth-child(odd) .hb-step-number,
+    .hb-timeline-item:nth-child(even) .hb-step-number {
+      left: 0;
+      right: auto;
+    }
+    
+    .hb-timeline-header h2 {
+        font-size: 26px;
+    }
+  }
+</style>
+
+<div class="hb-timeline-wrapper">
+  <div class="hb-timeline-header">
+    {% if section.settings.title != blank %}
+      <h2>{{ section.settings.title }}</h2>
+    {% endif %}
+    {% if section.settings.subtitle != blank %}
+      <p>{{ section.settings.subtitle }}</p>
+    {% endif %}
+  </div>
+
+  <div class="hb-timeline-container">
+    {% for block in section.blocks %}
+      <div class="hb-timeline-item" {{ block.shopify_attributes }}>
+        
+        <div class="hb-item-inner-wrapper">
+          
+          <div class="hb-content-box">
+            <span class="hb-step-number">0{{ forloop.index }}</span>
+            
+            {% if block.settings.icon != blank %}
+              <div class="hb-step-icon">
+                <img src="{{ block.settings.icon | image_url: width: 100 }}" alt="{{ block.settings.step_title }}" loading="lazy" width="50" height="50">
+              </div>
+            {% endif %}
+
+            <h3 class="hb-item-title">{{ block.settings.step_title }}</h3>
+            <p class="hb-item-desc">{{ block.settings.step_desc }}</p>
+          </div>
+
+          {% if block.settings.side_image != blank %}
+            <div class="hb-side-image-box">
+               <img src="{{ block.settings.side_image | image_url: width: 800 }}" alt="{{ block.settings.step_title }} image" loading="lazy">
+            </div>
+          {% endif %}
+          
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
