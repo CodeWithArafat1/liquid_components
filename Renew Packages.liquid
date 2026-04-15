@@ -1,0 +1,473 @@
+<style>
+/* --- Base Variables for Easy Customization --- */
+:root {
+    --primary-red: #ff3366;
+    --light-pink-bg: #fff0f3;
+    --text-main: #333333;
+    --text-muted: #777777;
+    --border-color: #eaeaea;
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+.pricing-section-{{ section.id }} {
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 0 20px;
+    font-family: var(--font-body);
+}
+
+.pricing-section-{{ section.id }} .section-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.pricing-section-{{ section.id }} .section-header h2 {
+    font-family: var(--font-heading);
+    font-size: 42px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.pricing-section-{{ section.id }} .section-header p {
+    color: var(--text-muted);
+    font-size: 16px;
+    margin: 0;
+}
+
+/* --- Grid Control System --- */
+.packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    align-items: start;
+}
+
+/* --- Package Card Base --- */
+.package-card {
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 2px solid transparent; 
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* --- Highlighted Card Control --- */
+.package-card.highlight-card {
+    border-color: var(--primary-red);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(255, 51, 102, 0.1);
+}
+
+/* --- Card Image Area --- */
+.card-image-wrapper {
+    position: relative;
+    height: 220px;
+    width: 100%;
+    background-color: #f4f4f4; /* Fallback if no image */
+}
+
+.card-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.package-title {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 22px;
+    margin: 0;
+    font-weight: 400;
+    z-index: 2;
+}
+
+.most-loved-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: var(--primary-red);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    z-index: 3;
+}
+
+/* --- Card Content Area --- */
+.card-content {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 25px 0;
+    flex-grow: 1;
+}
+
+.features-list li {
+    font-size: 14px;
+    color: var(--text-main);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.check-icon {
+    color: var(--primary-red);
+    font-weight: bold;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+/* --- Free Gift Box --- */
+.gift-box {
+    background-color: var(--light-pink-bg);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.gift-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-right: 15px;
+    background-color: #fff;
+}
+
+.gift-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.gift-badge {
+    color: var(--primary-red);
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+}
+
+.gift-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.gift-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* --- Pricing Area --- */
+.pricing-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.price-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.value-price {
+    text-decoration: line-through;
+    color: #a0a0a0;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.current-price {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    color: #2c3e50;
+    line-height: 1;
+    margin: 0;
+}
+
+.current-price span {
+    font-size: 20px;
+    vertical-align: super;
+}
+
+.save-amount {
+    color: var(--primary-red);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* --- Button --- */
+.select-btn {
+    width: 100%;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: var(--font-body);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+.select-btn:hover {
+    background-color: #333333;
+}
+</style>
+
+<section class="pricing-section-{{ section.id }}">
+    <div class="section-header">
+        {% if section.settings.heading != blank %}
+            <h2>{{ section.settings.heading }}</h2>
+        {% endif %}
+        {% if section.settings.subheading != blank %}
+            <p>{{ section.settings.subheading }}</p>
+        {% endif %}
+    </div>
+
+    <div class="packages-grid">
+        {% for block in section.blocks %}
+            <div class="package-card {% if block.settings.is_highlight %}highlight-card{% endif %}" {{ block.shopify_attributes }}>
+                
+                <div class="card-image-wrapper">
+                    {% if block.settings.is_highlight and block.settings.badge_text != blank %}
+                        <div class="most-loved-badge">{{ block.settings.badge_text }}</div>
+                    {% endif %}
+                    
+                    {% if block.settings.main_image %}
+                        {{ block.settings.main_image | image_url: width: 600 | image_tag: loading: 'lazy' }}
+                    {% endif %}
+                    <div class="image-overlay"></div>
+                    <h3 class="package-title">{{ block.settings.title }}</h3>
+                </div>
+                
+                <div class="card-content">
+                    <ul class="features-list">
+                        {% assign features = block.settings.features | newline_to_br | split: '<br />' %}
+                        {% for feature in features %}
+                            {% assign clean_feature = feature | strip %}
+                            {% if clean_feature != blank %}
+                                <li><span class="check-icon">✓</span> {{ clean_feature }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+
+                    {% if block.settings.show_gift %}
+                    <div class="gift-box">
+                        {% if block.settings.gift_image %}
+                            <img src="{{ block.settings.gift_image | image_url: width: 100 }}" alt="Gift Mask" class="gift-img" loading="lazy">
+                        {% endif %}
+                        <div class="gift-text">
+                            <div class="gift-badge">{{ block.settings.gift_badge }}</div>
+                            <div class="gift-title">{{ block.settings.gift_title }}</div>
+                            <div class="gift-desc">{{ block.settings.gift_desc }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="pricing-area">
+                        <div class="price-details">
+                            <span class="value-price">Value: {{ block.settings.value_price }}</span>
+                            <span class="current-price"><span>{{ block.settings.currency_symbol }}</span>{{ block.settings.current_price }}</span>
+                        </div>
+                        <div class="save-amount">{{ block.settings.save_amount }}</div>
+                    </div>
+
+                    <a href="{{ block.settings.button_link | default: '#' }}" class="select-btn">{{ block.settings.button_text }}</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% schema %}
+{
+  "name": "The Renew Packages",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "The Renew Packages"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Section Subheading",
+      "default": "Designed for the woman who deserves to feel seen, restored, and radiant."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "package",
+      "name": "Package Card",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Highlight Settings"
+        },
+        {
+          "type": "checkbox",
+          "id": "is_highlight",
+          "label": "Highlight this card (Red Border)",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "badge_text",
+          "label": "Badge Text",
+          "default": "MOST LOVED"
+        },
+        {
+          "type": "header",
+          "content": "Card Details"
+        },
+        {
+          "type": "image_picker",
+          "id": "main_image",
+          "label": "Main Background Image"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Package Title",
+          "default": "Renew Woman Package"
+        },
+        {
+          "type": "textarea",
+          "id": "features",
+          "label": "Features (Put each feature on a new line)",
+          "default": "Natural Hair Styling or Blowout\nPrecision Shaping"
+        },
+        {
+          "type": "header",
+          "content": "Free Gift Section"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_gift",
+          "label": "Show Gift Box",
+          "default": true
+        },
+        {
+          "type": "image_picker",
+          "id": "gift_image",
+          "label": "Gift Image"
+        },
+        {
+          "type": "text",
+          "id": "gift_badge",
+          "label": "Gift Badge Text",
+          "default": "🎁 FREE GIFT"
+        },
+        {
+          "type": "text",
+          "id": "gift_title",
+          "label": "Gift Title",
+          "default": "Take-Home Face Mask"
+        },
+        {
+          "type": "text",
+          "id": "gift_desc",
+          "label": "Gift Description",
+          "default": "Skin Renewal Treatment"
+        },
+        {
+          "type": "header",
+          "content": "Pricing & Button"
+        },
+        {
+          "type": "text",
+          "id": "value_price",
+          "label": "Original Value Price",
+          "default": "$250"
+        },
+        {
+          "type": "text",
+          "id": "currency_symbol",
+          "label": "Currency Symbol",
+          "default": "$"
+        },
+        {
+          "type": "text",
+          "id": "current_price",
+          "label": "Current Price (Number only)",
+          "default": "200"
+        },
+        {
+          "type": "text",
+          "id": "save_amount",
+          "label": "Save Amount Text",
+          "default": "Save $50"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Button Text",
+          "default": "Select Package"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "The Renew Packages",
+      "blocks": [
+        {
+          "type": "package"
+        },
+        {
+          "type": "package",
+          "settings": {
+            "is_highlight": true
+          }
+        },
+        {
+          "type": "package"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
