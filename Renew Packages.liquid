@@ -69,7 +69,7 @@
     position: relative;
     height: 220px;
     width: 100%;
-    background-color: #f4f4f4; /* Fallback if no image */
+    background-color: #f4f4f4;
 }
 
 .card-image-wrapper img {
@@ -209,16 +209,11 @@
 }
 
 .current-price {
-    font-family: var(--font-heading);
+    {% comment %} font-family: var(--font-heading); {% endcomment %}
     font-size: 32px;
     color: #2c3e50;
     line-height: 1;
     margin: 0;
-}
-
-.current-price span {
-    font-size: 20px;
-    vertical-align: super;
 }
 
 .save-amount {
@@ -228,6 +223,11 @@
 }
 
 /* --- Button --- */
+.package-form {
+    width: 100%;
+    margin: 0;
+}
+
 .select-btn {
     width: 100%;
     background-color: #1a1a1a;
@@ -249,9 +249,14 @@
 .select-btn:hover {
     background-color: #333333;
 }
+
+.select-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
 </style>
 
-<section class="pricing-section-{{ section.id }}">
+<section id="package" class="pricing-section-{{ section.id }}">
     <div class="section-header">
         {% if section.settings.heading != blank %}
             <h2>{{ section.settings.heading }}</h2>
@@ -263,6 +268,22 @@
 
     <div class="packages-grid">
         {% for block in section.blocks %}
+            
+            {% comment %} === DYNAMIC PRODUCT LOGIC === {% endcomment %}
+            {% assign product_obj = block.settings.package_product %}
+            
+            {% if product_obj != blank %}
+                {% assign p_title = product_obj.title %}
+                {% assign p_price = product_obj.price %}
+                {% assign p_compare = product_obj.compare_at_price %}
+                {% assign current_variant = product_obj.selected_or_first_available_variant %}
+            {% else %}
+                {% assign p_title = 'Please Select a Product' %}
+                {% assign p_price = 20000 %}
+                {% assign p_compare = 25000 %}
+                {% assign current_variant = blank %}
+            {% endif %}
+
             <div class="package-card {% if block.settings.is_highlight %}highlight-card{% endif %}" {{ block.shopify_attributes }}>
                 
                 <div class="card-image-wrapper">
@@ -272,9 +293,12 @@
                     
                     {% if block.settings.main_image %}
                         {{ block.settings.main_image | image_url: width: 600 | image_tag: loading: 'lazy' }}
+                    {% elsif product_obj != blank and product_obj.featured_image %}
+                        {{ product_obj.featured_image | image_url: width: 600 | image_tag: loading: 'lazy' }}
                     {% endif %}
+                    
                     <div class="image-overlay"></div>
-                    <h3 class="package-title">{{ block.settings.title }}</h3>
+                    <h3 class="package-title">{{ p_title }}</h3>
                 </div>
                 
                 <div class="card-content">
@@ -303,13 +327,37 @@
 
                     <div class="pricing-area">
                         <div class="price-details">
-                            <span class="value-price">Value: {{ block.settings.value_price }}</span>
-                            <span class="current-price"><span>{{ block.settings.currency_symbol }}</span>{{ block.settings.current_price }}</span>
+                            {% if p_compare > p_price %}
+                                <span class="value-price">Value: {{ p_compare | money }}</span>
+                            {% endif %}
+                            <span class="current-price">{{ p_price | money }}</span>
                         </div>
-                        <div class="save-amount">{{ block.settings.save_amount }}</div>
+                        
+                        {% if p_compare > p_price %}
+                            {% assign saved_amount = p_compare | minus: p_price %}
+                            <div class="save-amount">Save {{ saved_amount | money }}</div>
+                        {% endif %}
                     </div>
 
-                    <a href="{{ block.settings.button_link | default: '#' }}" class="select-btn">{{ block.settings.button_text }}</a>
+                    {% comment %} === ADD TO CART FORM (MINIMOG COMPATIBLE) === {% endcomment %}
+                    {% if product_obj != blank %}
+                        {% assign form_id = 'product-form-' | append: block.id %}
+                        {% form 'product', product_obj, id: form_id, class: 'package-form', novalidate: 'novalidate', data-type: 'add-to-cart-form' %}
+                            <input type="hidden" name="id" value="{{ current_variant.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            
+                            <button type="submit" name="add" class="select-btn" {% unless current_variant.available %}disabled{% endunless %}>
+                                {% if current_variant.available %}
+                                    {{ block.settings.button_text }}
+                                {% else %}
+                                    Sold Out
+                                {% endif %}
+                            </button>
+                        {% endform %}
+                    {% else %}
+                        <button type="button" class="select-btn" disabled>Select Product in Editor</button>
+                    {% endif %}
+                    
                 </div>
             </div>
         {% endfor %}
@@ -340,6 +388,15 @@
       "settings": [
         {
           "type": "header",
+          "content": "Product Selection"
+        },
+        {
+          "type": "product",
+          "id": "package_product",
+          "label": "Select Product (Required for Price/Cart)"
+        },
+        {
+          "type": "header",
           "content": "Highlight Settings"
         },
         {
@@ -361,13 +418,7 @@
         {
           "type": "image_picker",
           "id": "main_image",
-          "label": "Main Background Image"
-        },
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Package Title",
-          "default": "Renew Woman Package"
+          "label": "Main Background Image (Overrides Product Image)"
         },
         {
           "type": "textarea",
@@ -410,42 +461,13 @@
         },
         {
           "type": "header",
-          "content": "Pricing & Button"
-        },
-        {
-          "type": "text",
-          "id": "value_price",
-          "label": "Original Value Price",
-          "default": "$250"
-        },
-        {
-          "type": "text",
-          "id": "currency_symbol",
-          "label": "Currency Symbol",
-          "default": "$"
-        },
-        {
-          "type": "text",
-          "id": "current_price",
-          "label": "Current Price (Number only)",
-          "default": "200"
-        },
-        {
-          "type": "text",
-          "id": "save_amount",
-          "label": "Save Amount Text",
-          "default": "Save $50"
+          "content": "Button Settings"
         },
         {
           "type": "text",
           "id": "button_text",
           "label": "Button Text",
-          "default": "Select Package"
-        },
-        {
-          "type": "url",
-          "id": "button_link",
-          "label": "Button Link"
+          "default": "Add to Cart"
         }
       ]
     }
